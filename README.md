@@ -10,14 +10,8 @@
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.x installed  
-
-### Run the Chatbot
-```bash
-git clone https://github.com/your-username/chatbot.git
-cd chatbot
-python chatbot.py
-
+- Python 3.x installed
+   
 📂 Use Cases
 
 Customer support automation
@@ -25,3 +19,10 @@ Customer support automation
 Educational purposes (AI & NLP basics)
 
 Small-scale chatbot applications
+
+
+### Run the Chatbot
+```bash
+git clone https://github.com/your-username/chatbot.git
+cd chatbot
+python chatbot.py
