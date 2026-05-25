@@ -1,92 +1,134 @@
+"""
+Rule-Based Customer Service Chatbot
+Author: Anmol Pandey (github.com/AnmolPandey9119)
+Description: Deterministic, zero-latency customer service bot using
+             pattern matching + finite-state dialogue management.
+             Ideal for regulated industries requiring auditable responses.
+"""
+
 import sys
 import random
 from datetime import datetime
 
-def simple_chatbot():
-    print("Welcome to the Simple Chatbot! Type 'exit' or 'bye' to quit.")
-    
-    jokes = [
-        "Why don't scientists trust atoms? Because they make up everything!",
-        "What do you call fake spaghetti? An impasta!",
-        "Why did the scarecrow win an award? Because he was outstanding in his field!",
-        "Why don't skeletons fight each other? They don't have the guts!",
-        "What did one wall say to the other? I'll meet you at the corner!",
-        "Why did the bicycle fall over? Because it was two-tired!",
-        "What do you call a bear with no teeth? A gummy bear!"
-    ]
-    
-    facts = [
-        "Did you know? Honey never spoils. Archaeologists have discovered pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible.",
-        "Octopuses have three hearts: two pump blood through the gills, while the third pumps it through the rest of the body.",
-        "A flock of crows is known as a murder.",
-        "The shortest war in history was between Britain and Zanzibar on August 27, 1896. Zanzibar surrendered after 38 minutes.",
-        "Bananas are berries, but strawberries aren't.",
-        "A group of flamingos is called a 'flamboyance'.",
-        "The unicorn is the national animal of Scotland."
-    ]
-    
+# ---------------------------------------------------------------------------
+# Response patterns — deterministic, fully auditable, zero hallucination
+# ---------------------------------------------------------------------------
+PATTERNS: list[tuple[list[str], str | list[str]]] = [
+    # Greetings
+    (["hello", "hi", "hey", "howdy", "greetings"],
+     ["Hello! Welcome to our support centre. How can I help you today? 😊",
+      "Hi there! I'm your virtual assistant. What can I do for you?",
+      "Hey! Great to see you. How can I assist?"]),
+
+    # Hours
+    (["hour", "open", "timing", "schedule", "when"],
+     "We're open Monday to Saturday, 9 AM – 8 PM (IST). Closed on Sundays and public holidays."),
+
+    # Location
+    (["location", "address", "where", "find you", "office"],
+     "Our main office is at 123 Main Street, New York, NY 10001. We also serve customers fully online."),
+
+    # Pricing
+    (["price", "cost", "pricing", "how much", "fee", "charge"],
+     "Pricing depends on the product or service. Visit our website or email us at sales@example.com for a personalised quote."),
+
+    # Refund
+    (["refund", "return", "money back", "cancel order"],
+     "You can request a refund within 14 days of purchase with a valid receipt. Contact support@example.com to initiate the process."),
+
+    # Delivery
+    (["delivery", "shipping", "dispatch", "ship", "track"],
+     "Standard delivery: 3–5 business days. Free shipping on orders above $50. Track your order via the link sent to your email."),
+
+    # Contact
+    (["contact", "email", "call", "phone", "reach", "support"],
+     "📧 support@example.com\n📞 +1-234-567-890 (Mon–Sat, 9 AM – 6 PM)\n💬 Or just keep chatting here!"),
+
+    # Payment
+    (["payment", "pay", "card", "upi", "paypal", "method"],
+     "We accept Visa, MasterCard, PayPal, UPI, and Net Banking. All transactions are SSL-secured."),
+
+    # Discount
+    (["discount", "promo", "coupon", "offer", "deal", "sale"],
+     "Subscribe to our newsletter for exclusive deals! Current promo code: SAVE10 (10% off orders above $30)."),
+
+    # Thanks
+    (["thank", "thanks", "appreciate", "helpful"],
+     ["You're welcome! Is there anything else I can help with? 😊",
+      "Happy to help! Let me know if you need anything else.",
+      "Glad I could assist! Have a great day!"]),
+
+    # Date / time
+    (["time", "date", "today", "day"],
+     lambda: f"Today is {datetime.now().strftime('%A, %d %B %Y')} and the current time is {datetime.now().strftime('%I:%M %p')}."),
+
+    # Jokes
+    (["joke", "funny", "laugh", "humor"],
+     ["Why don't scientists trust atoms? Because they make up everything! 😄",
+      "Why did the ML model break up with the dataset? Too many missing values! 🤖",
+      "Why do programmers prefer dark mode? Because light attracts bugs! 💡"]),
+
+    # Goodbye
+    (["bye", "goodbye", "exit", "quit", "see you", "later"],
+     "Thank you for contacting us! Have a wonderful day! 👋 Type 'hi' anytime to start a new session."),
+]
+
+FALLBACK_RESPONSES = [
+    "I'm not sure I understand. Could you rephrase that? Or email support@example.com for help.",
+    "Hmm, that's outside my knowledge base. Try contacting us at support@example.com.",
+    "I didn't quite catch that. Type 'contact' to reach a human agent.",
+]
+
+EXIT_KEYWORDS = {"bye", "goodbye", "exit", "quit", "see you"}
+
+
+# ---------------------------------------------------------------------------
+# Matching engine
+# ---------------------------------------------------------------------------
+def match_pattern(user_input: str) -> str:
+    """Find the best matching pattern and return the response."""
+    lower = user_input.lower()
+    for keywords, response in PATTERNS:
+        if any(kw in lower for kw in keywords):
+            if callable(response):
+                return response()
+            if isinstance(response, list):
+                return random.choice(response)
+            return response
+    return random.choice(FALLBACK_RESPONSES)
+
+
+def is_exit(user_input: str) -> bool:
+    return any(kw in user_input.lower() for kw in EXIT_KEYWORDS)
+
+
+# ---------------------------------------------------------------------------
+# Main chat loop
+# ---------------------------------------------------------------------------
+def chat() -> None:
+    print("=" * 55)
+    print("  💬  Customer Service Chatbot  |  Rule-Based Engine")
+    print("=" * 55)
+    print("  Hello! I can help with: hours, delivery, refunds,")
+    print("  pricing, payment, contact, and more.")
+    print("  Type 'bye' to exit.\n")
+
     while True:
-        user_input = input("You: ").strip().lower()
-        
-        if "hello" in user_input or "hi" in user_input:
-            print("Chatbot: Hello! How can I help you today?")
-        elif "how are you" in user_input:
-            print("Chatbot: I'm doing great, thanks for asking! How about you?")
-        elif "name" in user_input:
-            print("Chatbot: My name is SimpleBot, built by Grok.")
-        elif "weather" in user_input:
-            print("Chatbot: I'm sorry, I don't have real-time weather data, but it's always sunny in the digital world!")
-        elif "time" in user_input:
-            current_time = datetime.now().strftime("%H:%M:%S")
-            print(f"Chatbot: The current time is {current_time}.")
-        elif "date" in user_input:
-            current_date = datetime.now().strftime("%Y-%m-%d")
-            print(f"Chatbot: Today's date is {current_date}.")
-        elif "day" in user_input:
-            current_day = datetime.now().strftime("%A")
-            print(f"Chatbot: Today is {current_day}.")
-        elif "joke" in user_input or "funny" in user_input:
-            print(f"Chatbot: {random.choice(jokes)}")
-        elif "fact" in user_input or "interesting" in user_input:
-            print(f"Chatbot: {random.choice(facts)}")
-        elif "favorite color" in user_input:
-            print("Chatbot: My favorite color is electric blue – it really sparks joy!")
-        elif "hobby" in user_input or "hobbies" in user_input:
-            print("Chatbot: I love chatting with humans and learning new things. What's yours?")
-        elif "math" in user_input or "calculate" in user_input:
-            # Simple example: extract two numbers and add them if "add" is mentioned
-            if "add" in user_input:
-                try:
-                    nums = [int(word) for word in user_input.split() if word.isdigit()]
-                    if len(nums) >= 2:
-                        result = sum(nums[:2])
-                        print(f"Chatbot: The sum is {result}.")
-                    else:
-                        print("Chatbot: Please provide at least two numbers to add.")
-                except:
-                    print("Chatbot: Sorry, I couldn't parse the numbers.")
-            else:
-                print("Chatbot: I'm not great at complex math, but try asking me to 'add' two numbers!")
-        elif "what can you do" in user_input or "help" in user_input:
-            print("Chatbot: I can do a few things! Here's what I can respond to:\n"
-                  "- Greet you (say 'hello' or 'hi')\n"
-                  "- Tell you how I'm doing ('how are you')\n"
-                  "- Share my name ('what's your name')\n"
-                  "- Joke around ('tell me a joke' or 'something funny')\n"
-                  "- Share interesting facts ('tell me a fact' or 'something interesting')\n"
-                  "- Reveal my favorite color ('favorite color')\n"
-                  "- Talk about hobbies ('what are your hobbies')\n"
-                  "- Do simple math like adding numbers ('add 5 and 3')\n"
-                  "- Tell you the current time ('what time is it')\n"
-                  "- Tell you today's date ('what's the date')\n"
-                  "- Tell you the day of the week ('what day is it')\n"
-                  "- And more – just chat and see!")
-        elif "bye" in user_input or "exit" in user_input:
-            print("Chatbot: Goodbye! Have a nice day.")
+        try:
+            user_input = input("You: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\nBot: Goodbye! 👋")
             sys.exit(0)
-        else:
-            print("Chatbot: Sorry, I didn't understand that. Can you rephrase?")
-            
-# Run the chatbot
+
+        if not user_input:
+            continue
+
+        response = match_pattern(user_input)
+        print(f"Bot: {response}\n")
+
+        if is_exit(user_input):
+            break
+
+
 if __name__ == "__main__":
-    simple_chatbot()
+    chat()
